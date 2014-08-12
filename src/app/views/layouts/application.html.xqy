@@ -30,7 +30,7 @@ declare variable $title as xs:string? := (vh:get('title'), "New Roxy Application
     <style>
       /* <!-- */
       svg { 
-        outline: 1px solid grey; 
+        outline: 1px solid blue; 
       }
       /* --> */
     </style>
