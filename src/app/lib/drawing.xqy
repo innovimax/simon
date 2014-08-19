@@ -164,6 +164,19 @@ declare function drawing:path() {
 	drawing:path(())
 };
 
+declare function drawing:use($link-to as xs:string) {
+	drawing:use($link-to, ())
+};
+
+declare function drawing:use($link-to as xs:string, $options as xs:string*) {
+	let $u := drawing:make-primitive("use")
+	let $_ := (drawing:set-attribute($u, "link-to", $link-to))
+	let $_ := for $option in $options 
+		let $option-key-value := fn:tokenize($option, "=")
+		return drawing:set-attribute($u, $option-key-value[1], $option-key-value[2])
+	return $u
+};
+
 declare function drawing:add-path-command($path as map:map, $cmd as node()) {
 	let $current-commands := drawing:get-attribute($path, "path-segments")
 	return
@@ -336,7 +349,10 @@ declare function drawing:render-object($object as map:map) {
 			if ($key eq "path-segments")
 			then
 				attribute d { drawing:print-path(drawing:get-attribute($object, "path-segments")) }
-			else 
+			else if ($key eq "link-to")
+			then
+				attribute xlink:href { drawing:get-attribute($object, "link-to") }
+			else
 				attribute { $key } { xs:string(map:get($attributes, $key)) },
 
 		if (drawing:is-a-group($object))

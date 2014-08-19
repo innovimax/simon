@@ -17,7 +17,7 @@ import module namespace drawing="http://marklogic.com/ps/drawing" at "/app/lib/d
       <td>
         <div>Compound Path</div>
         {
-          let $path := drawing:path(("fill=none", "stroke=#cc9944", "stroke-width=2"))
+          let $path := drawing:path(("fill=#113399", "stroke=#cc9944", "stroke-width=2"))
           let $_ := (drawing:add-move-to($path, 50, 10), drawing:add-line-to($path, 90, 90), 
             drawing:add-line-to($path, 10, 90), drawing:add-line-to($path, 50, 10))
           return 
@@ -27,7 +27,7 @@ import module namespace drawing="http://marklogic.com/ps/drawing" at "/app/lib/d
       <td>
         <div>Close Path</div>
         {
-          let $path := drawing:path(("fill=none", "stroke=#cc9944", "stroke-width=2"))
+          let $path := drawing:path(("fill=#113399", "stroke=#cc9944", "stroke-width=2", "opacity=0.5"))
           let $_ := (drawing:add-move-to($path, 50, 10), drawing:add-line-to($path, 90, 90), 
             drawing:add-line-to($path, 10, 90), drawing:add-close-path($path))
           return 

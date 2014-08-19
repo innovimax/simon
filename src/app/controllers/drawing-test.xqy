@@ -6,3 +6,7 @@ declare function c:path() {
   ()
 };
 
+declare function c:use() {
+  ()
+};
+
