@@ -1,6 +1,7 @@
 xquery version "1.0-ml";
 
 import module namespace drawing="http://marklogic.com/ps/drawing" at "/app/lib/drawing.xqy";
+import module namespace drawing-ext="http://marklogic.com/ps/drawing-ext" at "/app/lib/drawing-ext.xqy";
 
 <div>
   <div>
@@ -30,6 +31,12 @@ import module namespace drawing="http://marklogic.com/ps/drawing" at "/app/lib/d
         drawing:render(100, 100, (
           $gradient,
           drawing:rect(10, 10, 80, 80, ("fill=url(#g1)"))))
+    }
+  </div>
+  <div>
+    {
+      drawing:render(100, 100, (
+        drawing-ext:chevron(75, 30, 15)))
     }
   </div>
 </div>
