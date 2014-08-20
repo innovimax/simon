@@ -10,3 +10,7 @@ declare function c:use() {
   ()
 };
 
+declare function c:poly() {
+  ()
+};
+

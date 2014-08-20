@@ -177,6 +177,53 @@ declare function drawing:use($link-to as xs:string, $options as xs:string*) {
 	return $u
 };
 
+declare function drawing:polyline($points as xs:double*) {
+	drawing:polyline($points, ())
+};
+
+declare function drawing:polyline($points as xs:double*, $options as xs:string*) {
+	let $p := drawing:make-primitive("polyline")
+	let $pairs := for $point at $idx in $points 
+			where ($idx mod 2 eq 0) and ($idx gt 1)
+			return fn:string($points[$idx - 1])||","||fn:string($points[$idx])
+	let $_ := drawing:set-attribute($p, "points", fn:string-join($pairs, " "))
+	let $_ := for $option in $options 
+		let $option-key-value := fn:tokenize($option, "=")
+		return drawing:set-attribute($p, $option-key-value[1], $option-key-value[2])
+	return $p
+};
+
+declare function drawing:polygon($points as xs:double*) {
+	drawing:polygon($points, ())
+};
+
+declare function drawing:polygon($points as xs:double*, $options as xs:string*) {
+	let $p := drawing:make-primitive("polygon")
+	let $pairs := for $point at $idx in $points 
+			where ($idx mod 2 eq 0) and ($idx gt 1)
+			return fn:string($points[$idx - 1])||","||fn:string($points[$idx])
+	let $_ := drawing:set-attribute($p, "points", fn:string-join($pairs, " "))
+	let $_ := for $option in $options 
+		let $option-key-value := fn:tokenize($option, "=")
+		return drawing:set-attribute($p, $option-key-value[1], $option-key-value[2])
+	return $p
+};
+
+declare function drawing:gradient($id as xs:string, $type as xs:string) {
+	drawing:gradient($id, $type, ())
+};
+
+declare function drawing:gradient($id as xs:string, $type as xs:string, $options as xs:string*) {
+	let $gradient := if ($type eq "linear") 
+		then drawing:make-primitive("linearGradient")
+		else drawing:make-primitive("radialGradient")
+	let $_ := drawing:set-attribute($gradient, "id", $id)
+	let $_ := for $option in $options
+		let $option-key-value := fn:tokenize($option, "=")
+		return drawing:set-attribute($gradient, $option-key-value[1], $option-key-value[2])
+	return $gradient
+};
+
 declare function drawing:add-path-command($path as map:map, $cmd as node()) {
 	let $current-commands := drawing:get-attribute($path, "path-segments")
 	return
@@ -337,33 +384,71 @@ declare function drawing:add-scale($object as map:map, $factor) {
 				"," || $transform-expression)
 };
 
+declare function drawing:add-stop($gradient as map:map, $offset as xs:double, $color as xs:string) {
+	let $stop := <stop offset="{$offset}" stop-color="{$color}"/>
+	let $stops := drawing:get-attribute($gradient, "stops")
+	let $new-stops := if (fn:count($stops) gt 0) 
+		then ($stops, $stop)
+		else ($stop)
+	return
+		drawing:set-attribute($gradient, "stops", $new-stops)
+};
+
+declare function drawing:add-stop($gradient as map:map, $offset as xs:double, $color as xs:string, $opacity as xs:double) {
+	let $stop := <stop offset="{$offset}" stop-color="{$color}" stop-opacity="{$opacity}"/>
+	let $stops := drawing:get-attribute($gradient, "stops")
+	let $new-stops := if (fn:count($stops) gt 0) 
+		then ($stops, $stop)
+		else ($stop)
+	return
+		drawing:set-attribute($gradient, "stops", $new-stops)
+};
+
+declare function drawing:render-gradient($gradient as map:map) {
+	let $attributes := map:get($gradient, $k-attr)
+	return 
+		element { drawing:get-type($gradient) } {
+			for $key in map:keys($attributes)
+			where $key ne "stops"
+			return
+				attribute { $key } { xs:string(map:get($attributes, $key)) },
+
+			map:get($attributes, "stops")
+		}
+};
+
 (:
 	Render a given object in terms of SVG.
 :)
 declare function drawing:render-object($object as map:map) {
 	let $attributes := map:get($object, $k-attr)
-	return element { drawing:get-type($object) } {
-		for $key in map:keys($attributes)
-		where $key ne "text"
-		return 
-			if ($key eq "path-segments")
-			then
-				attribute d { drawing:print-path(drawing:get-attribute($object, "path-segments")) }
-			else if ($key eq "link-to")
-			then
-				attribute xlink:href { drawing:get-attribute($object, "link-to") }
-			else
-				attribute { $key } { xs:string(map:get($attributes, $key)) },
-
-		if (drawing:is-a-group($object))
+	return 
+		if (drawing:get-type($object) eq "linearGradient" or drawing:get-type($object) eq "radialGradient")
 		then
-			for $child in map:get($object, $k-chld)
-			return drawing:render-object($child)
-		else if (drawing:is-text($object))
-		then 
-			map:get($attributes, "text")
-		else ()
-	}
+			drawing:render-gradient($object)
+		else 
+			element { drawing:get-type($object) } {
+				for $key in map:keys($attributes)
+				where $key ne "text"
+				return 
+					if ($key eq "path-segments")
+					then
+						attribute d { drawing:print-path(drawing:get-attribute($object, "path-segments")) }
+					else if ($key eq "link-to")
+					then
+						attribute xlink:href { drawing:get-attribute($object, "link-to") }
+					else
+						attribute { $key } { xs:string(map:get($attributes, $key)) },
+
+				if (drawing:is-a-group($object))
+				then
+					for $child in map:get($object, $k-chld)
+					return drawing:render-object($child)
+				else if (drawing:is-text($object))
+				then 
+					map:get($attributes, "text")
+				else ()
+			}
 };
 
 (:
