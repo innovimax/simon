@@ -1,0 +1,25 @@
+body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.862em;
+}
+
+table.testing code {
+  display: block;
+  padding: 10px;
+  background-color: #ddd;
+}
+
+table.testing tr:nth-child(odd) {
+  background-color: #EEE;
+}
+
+table.testing td {
+  vertical-align: top;
+  font-size: 0.862em;
+  padding: 10px;
+}
+
+line.hollaback-x-axis-line {
+  stroke: #009900;
+  stroke-width: 5;
+}

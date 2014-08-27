@@ -1,5 +1,9 @@
 xquery version "1.0-ml";
 
+(:
+	TODO - add a set options function that takes a list of strings to set options.
+:)
+
 module namespace drawing="http://marklogic.com/ps/drawing";
 
 declare default element namespace "http://www.w3.org/2000/svg";
@@ -404,6 +408,14 @@ declare function drawing:add-stop($gradient as map:map, $offset as xs:double, $c
 		drawing:set-attribute($gradient, "stops", $new-stops)
 };
 
+declare function drawing:render-attribute($key, $value) {
+	if ($key eq "link-to")
+	then
+		attribute xlink:href { $value }
+	else
+		attribute { $key } { $value }
+};
+
 declare function drawing:render-gradient($gradient as map:map) {
 	let $attributes := map:get($gradient, $k-attr)
 	return 
@@ -411,9 +423,51 @@ declare function drawing:render-gradient($gradient as map:map) {
 			for $key in map:keys($attributes)
 			where $key ne "stops"
 			return
-				attribute { $key } { xs:string(map:get($attributes, $key)) },
+				drawing:render-attribute($key, xs:string(map:get($attributes, $key))),
 
 			map:get($attributes, "stops")
+		}
+};
+
+declare function drawing:render-text($text as map:map) {
+	let $attributes := map:get($text, $k-attr)
+	return
+		element { drawing:get-type($text) } {
+			for $key in map:keys($attributes)
+			where $key ne "text"
+			return
+				drawing:render-attribute($key, xs:string(map:get($attributes, $key))),
+			fn:string(map:get($attributes, "text"))
+		}
+};
+
+declare function drawing:render-path($path as map:map) {
+	let $attributes := map:get($path, $k-attr)
+	return
+		element { drawing:get-type($path) } {
+			for $key in map:keys($attributes)
+			let $attr := map:get($attributes, $key)
+			return
+				if ($key ne "path-segments")
+				then
+					drawing:render-attribute($key, xs:string($attr))
+				else
+					attribute d { drawing:print-path($attr) }
+		}
+};
+
+declare function drawing:render-group($group as map:map) {
+	let $attributes := map:get($group, $k-attr)
+	let $children := map:get($group, $k-chld)
+	return
+		element { drawing:get-type($group) } {
+			for $key in map:keys($attributes)
+			let $attr := map:get($attributes, $key)
+			return
+				drawing:render-attribute($key, xs:string($attr)),
+
+			for $child in $children
+			return drawing:render-object($child)
 		}
 };
 
@@ -426,28 +480,21 @@ declare function drawing:render-object($object as map:map) {
 		if (drawing:get-type($object) eq "linearGradient" or drawing:get-type($object) eq "radialGradient")
 		then
 			drawing:render-gradient($object)
-		else 
+		else if (drawing:get-type($object) eq 'text')
+		then
+			drawing:render-text($object)
+		else if (drawing:get-type($object) eq 'path')
+		then
+			drawing:render-path($object)
+		else if (drawing:is-a-group($object))
+		then
+			drawing:render-group($object)
+		else
 			element { drawing:get-type($object) } {
 				for $key in map:keys($attributes)
-				where $key ne "text"
+				let $attr := map:get($attributes, $key)
 				return 
-					if ($key eq "path-segments")
-					then
-						attribute d { drawing:print-path(drawing:get-attribute($object, "path-segments")) }
-					else if ($key eq "link-to")
-					then
-						attribute xlink:href { drawing:get-attribute($object, "link-to") }
-					else
-						attribute { $key } { xs:string(map:get($attributes, $key)) },
-
-				if (drawing:is-a-group($object))
-				then
-					for $child in map:get($object, $k-chld)
-					return drawing:render-object($child)
-				else if (drawing:is-text($object))
-				then 
-					map:get($attributes, "text")
-				else ()
+					drawing:render-attribute($key, xs:string($attr))
 			}
 };
 

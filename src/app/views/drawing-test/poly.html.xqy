@@ -36,7 +36,7 @@ import module namespace drawing-ext="http://marklogic.com/ps/drawing-ext" at "/a
   <div>
     {
       drawing:render(100, 100, (
-        drawing-ext:chevron(75, 30, 15)))
+        drawing-ext:chevron(100, 40, 20)))
     }
   </div>
 </div>

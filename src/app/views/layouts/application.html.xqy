@@ -27,13 +27,7 @@ declare variable $title as xs:string? := (vh:get('title'), "New Roxy Application
     <script src="/js/lib/jquery-1.7.1.min.js" type='text/javascript'></script>
     <script src="/js/lib/jquery-ui-1.8.18.min.js" type='text/javascript'></script>
     <script src="/js/app.js" type='text/javascript'></script>
-    <style>
-      /* <!-- */
-      svg { 
-        outline: 1px solid blue; 
-      }
-      /* --> */
-    </style>
+    <link rel='stylesheet' type='text/css' href='/css/app.css'/>
   </head>
   <body>
     <div class="index">
