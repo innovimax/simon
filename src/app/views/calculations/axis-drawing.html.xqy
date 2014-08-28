@@ -87,7 +87,7 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
     <tr>
       <td>
         Draw major ticks
-        <code>declare function parts:draw-major-tick($x-offset as xs:double, $options as map:map)</code>
+        <code>declare function parts:draw-major-x-tick($x-offset as xs:double, $options as map:map)</code>
       </td>
       <td>
         5px vertical lines 1 px wide every 20 pixels.
@@ -96,7 +96,7 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
         {
           let $options := parts:set-x-axis-defaults(map:new())
           let $ticks := for $x in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10) 
-            return parts:draw-major-tick(($x - 1.0) * 20.0, $options)
+            return parts:draw-major-x-tick(($x - 1.0) * 20.0, $options)
           return drawing:render($ticks)
         }
       </td>
@@ -105,7 +105,7 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
     <tr>
       <td>
         Draw major ticks set color to green using major-tick-color, width to 3px and length to 10px
-        <code>declare function parts:draw-major-tick($x-offset as xs:double, $options as map:map)</code>
+        <code>declare function parts:draw-major-x-tick($x-offset as xs:double, $options as map:map)</code>
       </td>
       <td>
         10px green vertical lines 3 px wide every 20 pixels.
@@ -115,7 +115,7 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
           let $options := parts:set-x-axis-defaults(map:new((map:entry("major-tick-size", 10), 
             map:entry("major-tick-width", 3), map:entry("major-tick-color", "#009900"))))
           let $ticks := for $x in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10) 
-            return parts:draw-major-tick(($x - 1.0) * 20.0, $options)
+            return parts:draw-major-x-tick(($x - 1.0) * 20.0, $options)
           return drawing:render($ticks)
         }
       </td>
@@ -124,7 +124,7 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
     <tr>
       <td>
         Draw major ticks set color to green using tick-color, width to 3px and length to 10px
-        <code>declare function parts:draw-major-tick($x-offset as xs:double, $options as map:map)</code>
+        <code>declare function parts:draw-major-x-tick($x-offset as xs:double, $options as map:map)</code>
       </td>
       <td>
         10px green vertical lines 3 px wide every 20 pixels.
@@ -134,7 +134,7 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
           let $options := parts:set-x-axis-defaults(map:new((map:entry("major-tick-size", 10), 
             map:entry("major-tick-width", 3), map:entry("tick-color", "#009900"))))
           let $ticks := for $x in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10) 
-            return parts:draw-major-tick(($x - 1.0) * 20.0, $options)
+            return parts:draw-major-x-tick(($x - 1.0) * 20.0, $options)
           return drawing:render($ticks)
         }
       </td>
@@ -144,7 +144,7 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
       <td>
         Draw major ticks set color to green using major-tick-color overrides tick color red, width to 3px 
         and length to 10px
-        <code>declare function parts:draw-major-tick($x-offset as xs:double, $options as map:map)</code>
+        <code>declare function parts:draw-major-x-tick($x-offset as xs:double, $options as map:map)</code>
       </td>
       <td>
         10px green vertical lines 3 px wide every 20 pixels.
@@ -155,7 +155,7 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
             map:entry("major-tick-width", 3), map:entry("tick-color", "#990000"),
             map:entry("major-tick-color", "#009900"))))
           let $ticks := for $x in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10) 
-            return parts:draw-major-tick(($x - 1.0) * 20.0, $options)
+            return parts:draw-major-x-tick(($x - 1.0) * 20.0, $options)
           return drawing:render($ticks)
         }
       </td>
@@ -433,6 +433,88 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
             parts:draw-x-axis-line(200, $options),
             parts:draw-x-axis-ticks(200, $data, $options),
             parts:x-axis-labels(200, $data, $options)))        
+          
+        }
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Display the y axis labels and ticks
+        <code>declare function parts:x-axis-labels($options as xs:string*)</code>
+      </td>
+      <td>
+        Draw the X axis labels
+      </td>
+      <td>
+        {
+          let $options := parts:set-y-axis-defaults(map:new())
+          let $data := for $x in (1 to 100) return $x
+          return drawing:render((parts:draw-y-axis-ticks(25, 200, $data, $options)))       
+          
+        }
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Display the y axis labels and ticks
+        <code>declare function parts:x-axis-labels($options as xs:string*)</code>
+      </td>
+      <td>
+        Draw the X axis labels
+      </td>
+      <td>
+        {
+          let $options := parts:set-y-axis-defaults(map:new())
+          let $data := for $x in (1 to 100) return $x
+          return drawing:render(50, 250, (
+            parts:draw-y-axis-ticks(25, 200, $data, $options),
+            parts:draw-y-axis-labels(25, 200, $data, $options)))       
+          
+        }
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Display the y axis labels and ticks
+        <code>declare function parts:x-axis-labels($options as xs:string*)</code>
+      </td>
+      <td>
+        Draw the X axis labels
+      </td>
+      <td>
+        {
+          let $options := parts:set-y-axis-defaults(map:new())
+          let $data := for $x in (1 to 100) return $x
+          return drawing:render(50, 250, (
+            parts:draw-y-axis-line(25, 200, $options),
+            parts:draw-y-axis-ticks(25, 200, $data, $options),
+            parts:draw-y-axis-labels(25, 200, $data, $options)))       
+          
+        }
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Display the y axis labels and ticks
+        <code>declare function parts:x-axis-labels($options as xs:string*)</code>
+      </td>
+      <td>
+        Draw the X axis labels
+      </td>
+      <td>
+        {
+          let $options := parts:set-y-axis-defaults(map:new())
+          let $data := for $x in (1 to 100) return $x
+          return drawing:render(250, 250, (
+            parts:draw-x-axis-line(200, $options),
+            parts:draw-x-axis-ticks(200, $data, $options),
+            parts:x-axis-labels(200, $data, $options),
+            parts:draw-y-axis-line(25, 200, $options),
+            parts:draw-y-axis-ticks(25, 200, $data, $options),
+            parts:draw-y-axis-labels(25, 200, $data, $options)))       
           
         }
       </td>
