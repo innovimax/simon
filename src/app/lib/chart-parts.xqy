@@ -313,35 +313,24 @@ declare function parts:draw-x-axis-ticks($width as xs:double, $data, $options as
   let $label-source as xs:string := map:get($options, "label-source")
   let $label-min := if (map:contains($options, "label-min")) then map:get($options, "label-min") else ()
   let $label-max := if (map:contains($options, "label-max")) then map:get($options, "label-max") else ()
-  let $css-prefix := if (map:contains($options, "css-prefix")) then map:get($options, "css-prefix") else ()
   let $min-tick-value as xs:double := parts:get-min-tick-value($label-source, $data, $label-min)
   let $max-tick-value as xs:double := parts:get-max-tick-value($label-source, $data, $label-max)
-  let $tick-distance as xs:double := $max-tick-value - $min-tick-value
-  let $optimal-major-tick-count as xs:double := parts:get-optimal-major-ticks-count($width, $optimal-major-tick-width)
-  let $major-ticks-every as xs:int := xs:int(parts:get-major-ticks-every($options, $max-tick-value, $min-tick-value, $optimal-major-tick-count))
-  let $minor-ticks-every as xs:double := parts:get-minor-ticks-every($options, $max-tick-value, $min-tick-value, $optimal-major-tick-count)
-  let $tick-spacing := xs:double($width) div fn:max((1, $tick-distance))
-  let $tick-lower-bound := xs:int(math:floor($min-tick-value))
-  let $tick-upper-bound := xs:int(math:ceil($max-tick-value))
-  let $pixels-per-tick as xs:double := $width div ($tick-upper-bound - $tick-lower-bound)
+  let $major-tick-count as xs:int := parts:get-optimal-major-ticks-count($width, $optimal-major-tick-width)
+  let $total-number-of-ticks := $max-tick-value - $min-tick-value + 1
+  let $pixels-per-tick := $width div $total-number-of-ticks
   return
-    for $tick-idx in $tick-lower-bound to $tick-upper-bound 
-    let $is-major-tick as xs:boolean := (($tick-idx - $tick-lower-bound + 1) mod $major-ticks-every) eq 0
-    let $x-offset as xs:double := ($tick-idx - $min-tick-value) * $tick-spacing
-    let $ticks-between := 
-      if ($is-major-tick) 
-      then
-        for $i in 1 to 4
-        let $ticks-back as xs:double := $major-ticks-every - $i * ($major-ticks-every div 5)
-        let $minor-x-offset as xs:double := $x-offset - $ticks-back * $pixels-per-tick
-        return
-          parts:draw-minor-tick($minor-x-offset, $options)
-      else ()
+    for $idx in 1 to $major-tick-count
+    let $tick-count := math:ceil($total-number-of-ticks * ($idx div $major-tick-count))
+    let $last-tick-count := math:ceil($total-number-of-ticks * (($idx - 1) div $major-tick-count))
+    let $x-offset := $pixels-per-tick * $tick-count
+    let $minor-tick-count := fn:round(($tick-count - $last-tick-count - 1) div 5)
+    let $minor-ticks := for $minor-idx in 1 to 5
+      let $minor-x-offset := $x-offset - $pixels-per-tick * $minor-tick-count * $minor-idx
+      return if ($minor-idx ne 5) then parts:draw-minor-tick($minor-x-offset, $options) else ()
     return
-      if ($is-major-tick)
-      then (parts:draw-major-tick($x-offset, $options), $ticks-between)
-      else ()
+      (parts:draw-major-tick($x-offset, $options), $minor-ticks)
 };
+
 
 declare function parts:x-axis-ticks($width as xs:double, $height as xs:double, $data, $options as xs:string*) {
   let $option-map := parts:options-to-map($options)
@@ -356,23 +345,20 @@ declare function parts:x-axis-labels($width, $data, $options as map:map) {
   let $css-prefix := if (map:contains($options, "css-prefix")) then map:get($options, "css-prefix") else ()
   let $min-tick-value as xs:double := parts:get-min-tick-value($label-source, $data, $label-min)
   let $max-tick-value as xs:double := parts:get-max-tick-value($label-source, $data, $label-max)
-  let $tick-distance as xs:double := $max-tick-value - $min-tick-value
-  let $optimal-major-tick-count as xs:double := parts:get-optimal-major-ticks-count($width, $optimal-major-tick-width)
-  let $major-ticks-every as xs:int := xs:int(parts:get-major-ticks-every($options, $max-tick-value, $min-tick-value, $optimal-major-tick-count))
-  let $tick-lower-bound := xs:int(math:floor($min-tick-value))
-  let $tick-upper-bound := xs:int(math:ceil($max-tick-value))
-  let $tick-spacing := xs:double($width) div fn:max((1, $tick-distance))
+  let $major-tick-count as xs:int := parts:get-optimal-major-ticks-count($width, $optimal-major-tick-width)
+  let $total-number-of-ticks := $max-tick-value - $min-tick-value + 1
+  let $pixels-per-tick := $width div $total-number-of-ticks
   return
-    for $tick-idx in $tick-lower-bound to $tick-upper-bound 
-    let $is-major-tick as xs:boolean := (($tick-idx - $tick-lower-bound + 1) mod $major-ticks-every) eq 0
-    let $x-offset as xs:double := ($tick-idx - $min-tick-value) * $tick-spacing
+    for $idx in 1 to $major-tick-count
+    let $tick-offset := fn:round($total-number-of-ticks * ($idx div $major-tick-count))
+    let $x-offset := $pixels-per-tick * $tick-offset
+    let $label := $min-tick-value + $tick-offset - 1
+    let $anchor := if ($idx ne $major-tick-count) then "text-anchor=middle" else "text-anchor=middle"
     return
-      if ($is-major-tick)
-      then drawing:text($x-offset, 17, xs:string($tick-idx), ("text-anchor=middle", "font-size=10", "font-weight=100"))
-      else ()
+      drawing:text($x-offset, 17, xs:string($label), ($anchor, "font-size=10", "font-weight=100"))
 };
 
-declare function parts:y-axis-ticks($data, $options as xs:string*) {
+declare function parts:draw-y-axis-ticks($height as xs:double, $data, $options as xs:string*) {
   ()
 };
 
