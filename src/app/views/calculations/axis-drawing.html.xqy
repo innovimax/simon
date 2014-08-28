@@ -396,5 +396,46 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
         }
       </td>
     </tr>
+
+    <tr>
+      <td>
+        Display the x axis labels and ticks
+        <code>declare function parts:x-axis-labels($options as xs:string*)</code>
+      </td>
+      <td>
+        Draw the X axis labels
+      </td>
+      <td>
+        {
+          let $options := parts:set-x-axis-defaults(map:new((map:entry("label-source", "data"))))
+          let $data := for $x in (27 to 234) return $x
+          return drawing:render((
+            parts:draw-x-axis-ticks(200, $data, $options),
+            parts:x-axis-labels(200, $data, $options)))        
+          
+        }
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Display the x axis labels and ticks
+        <code>declare function parts:x-axis-labels($options as xs:string*)</code>
+      </td>
+      <td>
+        Draw the X axis labels
+      </td>
+      <td>
+        {
+          let $options := parts:set-x-axis-defaults(map:new())
+          let $data := for $x in (1 to 100) return $x
+          return drawing:render((
+            parts:draw-x-axis-line(200, $options),
+            parts:draw-x-axis-ticks(200, $data, $options),
+            parts:x-axis-labels(200, $data, $options)))        
+          
+        }
+      </td>
+    </tr>
   </tbody>
 </table>
