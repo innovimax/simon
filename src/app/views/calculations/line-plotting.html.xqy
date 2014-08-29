@@ -55,15 +55,15 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
         {
           let $options := parts:set-line-plot-defaults(map:new())
           let $data := map:new((
-            map:entry("series1", for $x in 1 to 100 return ($x * 0.1)),
-            map:entry("series2", for $x in 1 to 100 return ($x * 0.1 + 10)),
-            map:entry("series3", for $x in 1 to 100 return ($x * 0.1 + 20)),
-            map:entry("series4", for $x in 1 to 100 return ($x * 0.1 + 30)),
-            map:entry("series5", for $x in 1 to 100 return ($x * 0.1 + 40)),
-            map:entry("series6", for $x in 1 to 100 return ($x * 0.1 + 50)),
-            map:entry("series7", for $x in 1 to 100 return ($x * 0.1 + 60)),
-            map:entry("series8", for $x in 1 to 100 return ($x * 0.1 + 70)),
-            map:entry("series9", for $x in 1 to 100 return ($x * 0.1 + 80)),
+            map:entry("series01", for $x in 1 to 100 return ($x * 0.1)),
+            map:entry("series02", for $x in 1 to 100 return ($x * 0.1 + 10)),
+            map:entry("series03", for $x in 1 to 100 return ($x * 0.1 + 20)),
+            map:entry("series04", for $x in 1 to 100 return ($x * 0.1 + 30)),
+            map:entry("series05", for $x in 1 to 100 return ($x * 0.1 + 40)),
+            map:entry("series06", for $x in 1 to 100 return ($x * 0.1 + 50)),
+            map:entry("series07", for $x in 1 to 100 return ($x * 0.1 + 60)),
+            map:entry("series08", for $x in 1 to 100 return ($x * 0.1 + 70)),
+            map:entry("series09", for $x in 1 to 100 return ($x * 0.1 + 80)),
             map:entry("series10", for $x in 1 to 100 return ($x * 0.1 + 90))))
           return 
             drawing:render(200, 200, parts:draw-line-plot(200, 200, $data, $options))

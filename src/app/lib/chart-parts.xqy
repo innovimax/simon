@@ -518,7 +518,7 @@ declare function parts:draw-multi-series-line-plot($width as xs:double, $height 
   return
     for $key at $idx in map:keys($data)
     let $series-data := map:get($data, $key)
-    let $color := $series-colors[($idx mod fn:count($series-colors))]
+    let $color := $series-colors[(($idx - 1) mod fn:count($series-colors)) + 1]
     order by $key
     return
       for $point-idx in 2 to fn:count($series-data)
@@ -527,7 +527,7 @@ declare function parts:draw-multi-series-line-plot($width as xs:double, $height 
       let $x2 := ($point-idx - 1) * $point-spacing
       let $y2 := (1 - ($series-data[$point-idx] - $global-min) div ($global-max - $global-min)) * $height
       return
-        drawing:line($x1, $y1, $x2, $y2, ("stroke="||$color, "stroke-width="||$line-width))
+        drawing:line($x1, $y1, $x2, $y2, ("class="||$key, "stroke="||$color, "stroke-width="||$line-width))
 
 };
 
