@@ -10,3 +10,7 @@ declare function c:tick-spacing() {
 declare function c:axis-drawing() {
   ()
 };
+
+declare function c:line-plotting() {
+  ()
+};

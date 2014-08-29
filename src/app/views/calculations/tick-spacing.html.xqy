@@ -48,7 +48,7 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
       {
         let $options := parts:options-to-map(("minor-ticks-every=11"))
         return
-          parts:get-minor-ticks-every($options, 20)
+          parts:get-minor-ticks-every($options, 1, 100, 5)
       } 
       </td>
     </tr>
@@ -62,7 +62,7 @@ import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib
       {
         let $options := parts:options-to-map(())
         return
-          parts:get-minor-ticks-every($options, 20)
+          parts:get-minor-ticks-every($options, 1, 100, 5)
       } 
       </td>
     </tr>

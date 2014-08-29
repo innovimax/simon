@@ -149,6 +149,15 @@ declare function parts:set-y-axis-defaults($options as map:map) {
   )
 };
 
+declare function parts:set-line-plot-defaults($options as map:map) {
+  if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", (
+    "#80A5E4", "#D45D5D", "#F2AE4E", "#D4D13F", "#3EB334", "#371FBF", "#873BE3")) else (),
+  if (fn:not(map:contains($options, "line-width"))) then map:put($options, "line-width", 2) else (),
+  if (fn:not(map:contains($options, "point-markers"))) then map:put($options, "point-markers", fn:false()) else (),
+  if (fn:not(map:contains($options, "point-marker-radius"))) then map:put($options, "point-marker-radius", 5) else (),
+  $options
+};
+
 (:
 
   axis-line-width - default 1
@@ -477,6 +486,55 @@ declare function parts:draw-y-axis-labels($width as xs:double, $height as xs:dou
       :)
       drawing:text($width - 10, $y-offset, xs:string($label), ($anchor, "font-size=10", "font-weight=100",
         "transform=rotate(-90, "||xs:string($width - 10)||","||xs:string($y-offset)||")"))
+};
+
+declare function parts:draw-simple-line-plot($width as xs:double, $height as xs:double, $data as xs:double*, 
+  $options as map:map) 
+{
+  let $min-value := fn:min($data)
+  let $max-value := fn:max($data)
+  let $point-spacing := $width div fn:count($data)
+  let $line-width := map:get($options, "line-width")
+  let $color := map:get($options, "series-colors")[1]
+  return
+    for $point-idx in 2 to fn:count($data)
+    let $x1 := ($point-idx - 2) * $point-spacing
+    let $y1 := (1 - ($data[$point-idx - 1] - $min-value) div ($max-value - $min-value)) * $height
+    let $x2 := ($point-idx - 1) * $point-spacing
+    let $y2 := (1 - ($data[$point-idx] - $min-value) div ($max-value - $min-value)) * $height
+    return
+      drawing:line($x1, $y1, $x2, $y2, ("stroke="||$color, "stroke-width="||$line-width))
+};
+
+declare function parts:draw-multi-series-line-plot($width as xs:double, $height as xs:double, $data as map:map, 
+  $options as map:map) 
+{
+  let $global-max := fn:max(for $key in map:keys($data) return fn:max(map:get($data, $key)))
+  let $global-min := fn:min(for $key in map:keys($data) return fn:min(map:get($data, $key)))
+  let $max-count := fn:max(for $key in map:keys($data) return fn:count(map:get($data, $key)))
+  let $point-spacing := $width div $max-count
+  let $line-width := map:get($options, "line-width")
+  let $series-colors := map:get($options, "series-colors")
+  return
+    for $key at $idx in map:keys($data)
+    let $series-data := map:get($data, $key)
+    let $color := $series-colors[($idx mod fn:count($series-colors))]
+    order by $key
+    return
+      for $point-idx in 2 to fn:count($series-data)
+      let $x1 := ($point-idx - 2) * $point-spacing
+      let $y1 := (1 - ($series-data[$point-idx - 1] - $global-min) div ($global-max - $global-min)) * $height
+      let $x2 := ($point-idx - 1) * $point-spacing
+      let $y2 := (1 - ($series-data[$point-idx] - $global-min) div ($global-max - $global-min)) * $height
+      return
+        drawing:line($x1, $y1, $x2, $y2, ("stroke="||$color, "stroke-width="||$line-width))
+
+};
+
+declare function parts:draw-line-plot($width as xs:double, $height as xs:double, $data, $options as map:map) {
+  typeswitch($data)
+    case map:map return parts:draw-multi-series-line-plot($width, $height, $data, $options)
+    default return parts:draw-simple-line-plot($width, $height, $data, $options)
 };
 
 (:
