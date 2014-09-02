@@ -14,3 +14,7 @@ declare function c:poly() {
   ()
 };
 
+declare function c:line-graph-tests() {
+  ()
+};
+

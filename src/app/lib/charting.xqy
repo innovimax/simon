@@ -3,6 +3,7 @@ xquery version "1.0-ml";
 module namespace chart="http://marklogic.com/ps/charting";
 
 import module namespace drawing="http://marklogic.com/ps/drawing" at "/app/lib/drawing.xqy";
+import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib/chart-parts.xqy";
 
 declare namespace svg="http://www.w3.org/2000/svg";
 declare namespace options="chart:options";
@@ -196,6 +197,67 @@ declare function chart:line-chart($width as xs:double, $height as xs:double, $op
 	</chart:chart>
 };
 
+
+
+declare function chart:parse-chart-options($options as xs:string*, $x-options as map:map, $y-options as map:map, 
+	$chart-options as map:map) 
+{
+	for $option in $options
+	let $option-parts := fn:tokenize($option, "=")
+	let $option-name := $option-parts[1]
+	let $option-value := $option-parts[2]
+	return
+		if (fn:starts-with($option-name, 'x-axis-'))
+		then 
+			let $x-axis-option-name := fn:substring($option-name, fn:string-length('x-axis-'))
+			return map:put($x-options, $x-axis-option-name, $option-value)
+		else if (fn:starts-with($option-name, 'y-axis-'))
+		then
+			let $y-axis-option-name := fn:substring($option-name, fn:string-length('y-axis-'))
+			return map:put($y-options, $y-axis-option-name, $option-value)
+		else if (fn:starts-with($option-name, 'axis-'))
+		then
+			let $axis-option-name := fn:substring($option-name, fn:string("axis-"))
+			return (map:put($y-options, $axis-option-name, $option-value), 
+				map:put($x-options, $axis-option-name, $option-value))
+		else 
+			map:put($chart-options, $option-name, $option-value)
+
+};
+
+declare function chart:draw-line-plot($width as xs:double, $height as xs:double, $data, $options as xs:string*) {
+	let $x-axis-settings := map:new()
+	let $y-axis-settings := map:new()
+	let $chart-settings := map:new()
+	let $_ := chart:parse-chart-options($options, $x-axis-settings, $y-axis-settings, $chart-settings)
+	let $x-axis-options := parts:set-x-axis-defaults($x-axis-settings)
+	let $y-axis-options := parts:set-y-axis-defaults($y-axis-settings)
+	let $plot-options := parts:set-line-plot-defaults($chart-settings)
+
+	let $default-y-axis-width := 25
+	let $default-x-axis-height := 25
+	let $x-axis-width := $width - $default-y-axis-width
+	let $chart-height := $height - $default-x-axis-height
+	let $chart-width := $width - $default-y-axis-width
+
+	let $x-axis := drawing:make-group((parts:draw-x-axis-line($x-axis-width, $x-axis-options),
+		parts:draw-x-axis-ticks($x-axis-width, $data, $x-axis-options),
+		parts:x-axis-labels($x-axis-width, $data, $x-axis-options)))
+	let $y-axis := drawing:make-group((parts:draw-y-axis-line($default-y-axis-width, $chart-height, $y-axis-options),
+		parts:draw-y-axis-ticks($default-y-axis-width, $chart-height, $data, $y-axis-options),
+		parts:draw-y-axis-labels($default-y-axis-width, $chart-height, $data, $y-axis-options)))
+	let $plot := parts:draw-line-plot($chart-width, $chart-height, $data, $plot-options)
+	let $_ := (drawing:set-attribute($x-axis, "transform", "translate("||xs:string($default-y-axis-width)||", "||xs:string($chart-height)||")"),
+		drawing:set-attribute($plot, "transform", "translate("||$default-y-axis-width||", 0)"))
+	return
+		drawing:render($width, $height, ($plot, $x-axis, $y-axis))
+};
+
+declare function chart:draw-line-plot($width as xs:double, $height as xs:double, $data) {
+	chart:draw-line-plot($width, $height, $data, ())
+};
+
+(:
 declare function chart:draw-line-plot($graph-bounds as map:map, $series-config as node(), $chart-size as node(), 
 		$values as xs:anyAtomicType*) as map:map
 {
@@ -227,6 +289,7 @@ declare function chart:draw-line-plot($graph-bounds as map:map, $series-config a
 				($segment, $points)
 	)
 };
+:)
 
 declare function chart:draw-bar-plot($graph-bounds as map:map, $series-config as node(), $chart-size as node(), 
 		$values as xs:anyAtomicType*) as map:map
@@ -339,7 +402,7 @@ declare function chart:draw-y-axis($y-axis-bounds as map:map, $y-axis-config as 
 		drawing:make-group(($base-line, $ticks))
 };
 
-
+(:
 declare function chart:line-plot($chart as node(), $values as xs:anyAtomicType*) as map:map {
 	let $chart-width := xs:double($chart//chart:size/chart:width)
 	let $chart-height := xs:double($chart//chart:size/chart:height)
@@ -359,7 +422,7 @@ declare function chart:line-plot($chart as node(), $values as xs:anyAtomicType*)
 		chart:draw-x-axis($x-axis-bounds, $chart//chart:x-axis, $values), 
 		chart:draw-y-axis($y-axis-bounds, $chart//chart:y-axis, $values)))
 };
-
+:)
 declare function chart:bar-plot($chart as node(), $values as xs:anyAtomicType*) as map:map {
 	let $chart-width := xs:double($chart//chart:size/chart:width)
 	let $chart-height := xs:double($chart//chart:size/chart:height)
@@ -384,6 +447,7 @@ declare function chart:bar-plot($chart as node(), $values as xs:anyAtomicType*) 
 (:
 	Plots the values defined in the chart
 :)
+(:
 declare function chart:plot($chart as node(), $values as xs:anyAtomicType*)  {
 	let $width := $chart//chart:size/chart:width
 	let $height := $chart//chart:size/chart:height
@@ -396,6 +460,7 @@ declare function chart:plot($chart as node(), $values as xs:anyAtomicType*)  {
 			drawing:render($width, $height, chart:bar-plot($chart, $values))
 		else ()
 };
+:)
 
 declare function chart:xxx-line-chart($width, $height, $values as xs:anyAtomicType*) as node()  {
 	let $r := drawing:rect(0, 0, $width, $height)

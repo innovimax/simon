@@ -434,7 +434,7 @@ declare function parts:x-axis-labels($width, $data, $options as map:map) {
     let $tick-offset := fn:round($total-number-of-ticks * ($idx div $major-tick-count))
     let $x-offset := $pixels-per-tick * $tick-offset
     let $label := $min-tick-value + $tick-offset - 1
-    let $anchor := if ($idx ne $major-tick-count) then "text-anchor=middle" else "text-anchor=middle"
+    let $anchor := if ($idx ne $major-tick-count) then "text-anchor=middle" else "text-anchor=end"
     return
       drawing:text($x-offset, 17, xs:string($label), ($anchor, "font-size=10", "font-weight=100"))
 };
@@ -496,14 +496,11 @@ declare function parts:draw-simple-line-plot($width as xs:double, $height as xs:
   let $point-spacing := $width div fn:count($data)
   let $line-width := map:get($options, "line-width")
   let $color := map:get($options, "series-colors")[1]
+  let $points := for $point-idx in 1 to fn:count($data)
+    return (($point-idx - 1) * $point-spacing, 
+      (1 - ($data[$point-idx] - $min-value) div ($max-value - $min-value)) * $height)
   return
-    for $point-idx in 2 to fn:count($data)
-    let $x1 := ($point-idx - 2) * $point-spacing
-    let $y1 := (1 - ($data[$point-idx - 1] - $min-value) div ($max-value - $min-value)) * $height
-    let $x2 := ($point-idx - 1) * $point-spacing
-    let $y2 := (1 - ($data[$point-idx] - $min-value) div ($max-value - $min-value)) * $height
-    return
-      drawing:line($x1, $y1, $x2, $y2, ("stroke="||$color, "stroke-width="||$line-width))
+    drawing:polyline($points, ("stroke="||$color, "stroke-width="||$line-width))
 };
 
 declare function parts:draw-multi-series-line-plot($width as xs:double, $height as xs:double, $data as map:map, 
@@ -519,15 +516,12 @@ declare function parts:draw-multi-series-line-plot($width as xs:double, $height 
     for $key at $idx in map:keys($data)
     let $series-data := map:get($data, $key)
     let $color := $series-colors[(($idx - 1) mod fn:count($series-colors)) + 1]
+    let $points := for $point-idx in 1 to fn:count($series-data)
+      return (($point-idx - 1) * $point-spacing,
+        (1 - ($series-data[$point-idx] - $global-min) div ($global-max - $global-min)) * $height)
     order by $key
     return
-      for $point-idx in 2 to fn:count($series-data)
-      let $x1 := ($point-idx - 2) * $point-spacing
-      let $y1 := (1 - ($series-data[$point-idx - 1] - $global-min) div ($global-max - $global-min)) * $height
-      let $x2 := ($point-idx - 1) * $point-spacing
-      let $y2 := (1 - ($series-data[$point-idx] - $global-min) div ($global-max - $global-min)) * $height
-      return
-        drawing:line($x1, $y1, $x2, $y2, ("class="||$key, "stroke="||$color, "stroke-width="||$line-width))
+      drawing:polyline($points, ("class="||$key, "stroke="||$color, "stroke-width="||$line-width))
 
 };
 
