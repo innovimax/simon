@@ -72,5 +72,20 @@ import module namespace charts="http://marklogic.com/ps/charting" at "/app/lib/c
         }
       </td>
     </tr>
+
+    <tr>
+      <td>
+        Basic line plot, 1 series, 10 points.  Set series color to red and line width to 5.
+        <code>declare function parts:draw-line-plot($width as xs:double, $height as xs:double, $data, $options as xs:string*)</code>
+      </td>
+      <td>An upward sloping straight line</td>
+      <td>
+        {
+          let $data := (1, 4, 9, 16, 25, 36, 49, 64, 81, 100)
+          return 
+            charts:draw-line-plot(320, 200, $data, ("series-colors=#CC0000", "line-width=5"))
+        }
+      </td>
+    </tr>
   </tbody>
 </table>

@@ -398,12 +398,12 @@ declare function parts:draw-x-axis-ticks($width as xs:double, $data, $options as
   let $max-tick-value as xs:double := parts:get-max-tick-value($label-source, $data, $label-max)
   let $major-tick-count as xs:int := parts:get-optimal-major-ticks-count($width, $optimal-major-tick-width)
   let $total-number-of-ticks := $max-tick-value - $min-tick-value + 1
-  let $pixels-per-tick := $width div $total-number-of-ticks
+  let $pixels-per-tick := $width div ($total-number-of-ticks - 1)
   return
     for $idx in 1 to $major-tick-count
     let $tick-count := math:ceil($total-number-of-ticks * ($idx div $major-tick-count))
     let $last-tick-count := math:ceil($total-number-of-ticks * (($idx - 1) div $major-tick-count))
-    let $x-offset := $pixels-per-tick * $tick-count
+    let $x-offset := $pixels-per-tick * ($tick-count - 1)
     let $minor-tick-count := fn:round(($tick-count - $last-tick-count - 1) div 5)
     let $minor-ticks := for $minor-idx in 1 to 5
       let $minor-x-offset := $x-offset - $pixels-per-tick * $minor-tick-count * $minor-idx
@@ -428,11 +428,11 @@ declare function parts:x-axis-labels($width, $data, $options as map:map) {
   let $max-tick-value as xs:double := parts:get-max-tick-value($label-source, $data, $label-max)
   let $major-tick-count as xs:int := parts:get-optimal-major-ticks-count($width, $optimal-major-tick-width)
   let $total-number-of-ticks := $max-tick-value - $min-tick-value + 1
-  let $pixels-per-tick := $width div $total-number-of-ticks
+  let $pixels-per-tick := $width div ($total-number-of-ticks - 1)
   return
     for $idx in 1 to $major-tick-count
     let $tick-offset := fn:round($total-number-of-ticks * ($idx div $major-tick-count))
-    let $x-offset := $pixels-per-tick * $tick-offset
+    let $x-offset := $pixels-per-tick * ($tick-offset - 1)
     let $label := $min-tick-value + $tick-offset - 1
     let $anchor := if ($idx ne $major-tick-count) then "text-anchor=middle" else "text-anchor=end"
     return
@@ -493,14 +493,14 @@ declare function parts:draw-simple-line-plot($width as xs:double, $height as xs:
 {
   let $min-value := fn:min($data)
   let $max-value := fn:max($data)
-  let $point-spacing := $width div fn:count($data)
+  let $point-spacing := $width div (fn:count($data) - 1)
   let $line-width := map:get($options, "line-width")
   let $color := map:get($options, "series-colors")[1]
   let $points := for $point-idx in 1 to fn:count($data)
     return (($point-idx - 1) * $point-spacing, 
       (1 - ($data[$point-idx] - $min-value) div ($max-value - $min-value)) * $height)
   return
-    drawing:polyline($points, ("stroke="||$color, "stroke-width="||$line-width))
+    drawing:polyline($points, ("stroke="||$color, "stroke-width="||$line-width, "fill=none"))
 };
 
 declare function parts:draw-multi-series-line-plot($width as xs:double, $height as xs:double, $data as map:map, 

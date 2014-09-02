@@ -225,10 +225,12 @@ declare function chart:parse-chart-options($options as xs:string*, $x-options as
 
 };
 
+
 declare function chart:draw-line-plot($width as xs:double, $height as xs:double, $data, $options as xs:string*) {
 	let $x-axis-settings := map:new()
 	let $y-axis-settings := map:new()
 	let $chart-settings := map:new()
+
 	let $_ := chart:parse-chart-options($options, $x-axis-settings, $y-axis-settings, $chart-settings)
 	let $x-axis-options := parts:set-x-axis-defaults($x-axis-settings)
 	let $y-axis-options := parts:set-y-axis-defaults($y-axis-settings)
