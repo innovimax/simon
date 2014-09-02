@@ -401,8 +401,8 @@ declare function parts:draw-x-axis-ticks($width as xs:double, $data, $options as
   let $pixels-per-tick := $width div ($total-number-of-ticks - 1)
   return
     for $idx in 1 to $major-tick-count
-    let $tick-count := math:ceil($total-number-of-ticks * ($idx div $major-tick-count))
-    let $last-tick-count := math:ceil($total-number-of-ticks * (($idx - 1) div $major-tick-count))
+    let $tick-count := fn:round($total-number-of-ticks * ($idx div $major-tick-count))
+    let $last-tick-count := fn:round($total-number-of-ticks * (($idx - 1) div $major-tick-count))
     let $x-offset := $pixels-per-tick * ($tick-count - 1)
     let $minor-tick-count := fn:round(($tick-count - $last-tick-count - 1) div 5)
     let $minor-ticks := for $minor-idx in 1 to 5
