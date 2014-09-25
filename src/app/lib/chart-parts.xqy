@@ -145,6 +145,7 @@ declare function parts:set-y-axis-defaults($options as map:map) {
     if (fn:not(map:contains($options, "minor-tick-width"))) then map:put($options, "minor-tick-width", 1) else (),
     if (fn:not(map:contains($options, "major-tick-width"))) then map:put($options, "major-tick-width", 1) else (),
     if (fn:not(map:contains($options, "axis-line-width"))) then map:put($options, "axis-line-width", 1) else (),
+    if (fn:not(map:contains($options, "rotation"))) then map:put($options, "rotation", 90) else (),
     $options
   )
 };
@@ -155,6 +156,12 @@ declare function parts:set-line-plot-defaults($options as map:map) {
   if (fn:not(map:contains($options, "line-width"))) then map:put($options, "line-width", 2) else (),
   if (fn:not(map:contains($options, "point-markers"))) then map:put($options, "point-markers", fn:false()) else (),
   if (fn:not(map:contains($options, "point-marker-radius"))) then map:put($options, "point-marker-radius", 5) else (),
+  $options
+};
+
+declare function parts:set-bar-graph-defaults($options as map:map) {
+  if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", (
+    "#80A5E4", "#D45D5D", "#F2AE4E", "#D4D13F", "#3EB334", "#371FBF", "#873BE3")) else (),
   $options
 };
 
@@ -223,15 +230,17 @@ declare function parts:draw-y-axis-line($width as xs:double, $height as xs:doubl
   Tested
 :)
 declare function parts:get-min-tick-value($label-source, $data, $label-min) {
-  if ($label-source eq "ordinal") 
+  if (fn:exists($label-min))
+  then
+    $label-min
+  else if ($label-source eq "ordinal") 
   then
     1
   else if ($label-source eq "data")
   then
     fn:min($data)
-  else if (fn:exists($label-min))
-  then $label-min
-  else 1
+  else
+    1
 };
 
 (:
@@ -471,21 +480,37 @@ declare function parts:draw-y-axis-labels($width as xs:double, $height as xs:dou
   let $major-tick-count as xs:int := parts:get-optimal-major-ticks-count($height, $optimal-major-tick-width)
   let $total-number-of-ticks := $max-tick-value - $min-tick-value + 1
   let $pixels-per-tick := $height div $total-number-of-ticks
-  let $_ := xdmp:log("Drawing y axis labels, major tick count = " || $major-tick-count)
+  let $rotation := map:get($options, 'rotation')
+  let $_ := xdmp:log(element parts:draw-y-axis-labels {
+    element label-min { $label-min }, element label-max { $label-max },
+    element min-tick-value { $min-tick-value }, element max-tick-value { $max-tick-value },
+    element major-tick-count { $major-tick-count },
+    element total-number-of-ticks { $total-number-of-ticks },
+    element pixels-per-tick { $pixels-per-tick },
+    element rotation { $rotation }
+  })
   return
-    for $idx in 1 to $major-tick-count
+    for $idx in 1 to xs:int($major-tick-count) - 1
     let $_ := xdmp:log("Drawing label: " || xs:string($idx))
-    let $tick-offset := fn:round($total-number-of-ticks * ($idx div $major-tick-count))
-    let $y-offset := $height - $pixels-per-tick * $tick-offset
-    let $label := $min-tick-value + $tick-offset - 1
-    let $anchor := if ($idx ne $major-tick-count) then "text-anchor=middle" else "text-anchor=end"
+    let $tick-offset := $idx * fn:round($total-number-of-ticks div ($major-tick-count - 1))
+
+    let $y-offset := $height - $height * ($tick-offset - $min-tick-value) div ($max-tick-value - $min-tick-value)
+    let $label := $min-tick-value + $tick-offset
+    let $anchor := if ($rotation eq 0) then "text-anchor=end" 
+      else if ($idx ne $major-tick-count) then "text-anchor=middle" 
+      else "text-anchor=end"
+    let $_ := xdmp:log(element parts:draw-y-axis-labels {
+      element tick-offset { $tick-offset }, element y-offset { $y-offset }, 
+      element label { $label }, element anchor { $anchor }
+    })
+    where $tick-offset <= $max-tick-value
     return
       (:
       drawing:text(0, 0, xs:string($label), ($anchor, "font-size=10", "font-weight=100", 
         "transform=rotate(90) translate(" || xs:string($width - 5) ||", "||$y-offset||")"))
       :)
       drawing:text($width - 10, $y-offset, xs:string($label), ($anchor, "font-size=10", "font-weight=100",
-        "transform=rotate(-90, "||xs:string($width - 10)||","||xs:string($y-offset)||")"))
+        "transform=rotate(-" || xs:string($rotation) || ", "||xs:string($width - 10)||","||xs:string($y-offset)||")"))
 };
 
 declare function parts:draw-simple-line-plot($width as xs:double, $height as xs:double, $data as xs:double*, 
@@ -529,6 +554,50 @@ declare function parts:draw-line-plot($width as xs:double, $height as xs:double,
   typeswitch($data)
     case map:map return parts:draw-multi-series-line-plot($width, $height, $data, $options)
     default return parts:draw-simple-line-plot($width, $height, $data, $options)
+};
+
+declare function parts:draw-bar-labels($width as xs:double, $labels, $options as map:map) {
+  let $segment-width := $width div fn:count($labels)
+  let $mid-point := $segment-width div 2.0
+  let $rotation := if (map:get($options, "rotation")) then map:get($options, "rotation") else 0
+  for $label at $label-idx in $labels
+    let $x := $segment-width * ($label-idx - 1) + $mid-point
+    let $y := 10
+    let $anchor := if ($rotation gt 0) then "text-anchor=end" else "text-anchor=middle" 
+    return
+      drawing:text($x, $y, xs:string($label), ($anchor, "font-size=10", "font-weight=100",
+        "transform=rotate(" || -$rotation || ", "||xs:string($x)||","||xs:string($y)||")"))
+
+};
+
+(:
+  Assumes that the caller is sending in Label, Value pairs.  Where the Label is the label for the
+  X axis and the 
+:)
+declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $options as map:map, $data as map:map) {
+  let $_ := xdmp:log($options, "info")
+  let $all-values := map:get($data, "values")
+  let $min-value := min(($all-values, map:get($options, "min-value")))
+  let $max-value := max(($all-values, map:get($options, "max-value")))
+  let $bar-gap := 3.0
+  let $outer-width := $width div fn:count($all-values)
+  let $bar-width := $outer-width - $bar-gap
+  let $color := map:get($options, "series-colors")[1]
+  let $_ := xdmp:log(element bar-chart {
+    element all-values { $all-values },
+    element min-value { $min-value },
+    element max-value { $max-value },
+    element outer-width { $outer-width },
+    element bar-width { $bar-width },
+    element color { $color }
+  }, "notice")
+  return
+    for $datum at $data-idx in $all-values
+    let $y := (1 - (($datum - $min-value) div ($max-value - $min-value))) * $height
+    let $bar-height := ($datum - $min-value) div ($max-value - $min-value) * $height
+    let $x := ($data-idx - 1) * $outer-width + ($bar-gap div 2.0)
+    return 
+      drawing:rect($x, $y, $bar-width, $bar-height, ("fill="||$color))
 };
 
 (:

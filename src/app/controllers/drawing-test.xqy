@@ -18,3 +18,7 @@ declare function c:line-graph-tests() {
   ()
 };
 
+declare function c:bar-graph-tests() {
+  ()
+};
+
