@@ -8,112 +8,38 @@ declare namespace svg="http://www.w3.org/2000/svg";
 
 declare variable $optimal-major-tick-width as xs:int := 50;
 
-(:
-  Generic options available to all parts:
 
-  css-prefix - no default value
-  The prefix used for the CSS class.  For example "foobar", will create CSS classes for
-  the parts in the chart with "foobar-axis", "foobar-axis-label", "foobar-axis-label-1", etc.
-
-
-  use-css - false/no
-  Do not set styling information in SVG and instead expect styling to come from CSS.
-:)
-
-
-(:
-  Generates an X (horizontal) axis with a line and tick marks every so often.
-  There are 2 types of tick marks, major and minor.  Major tick marks can have numeric below
-  them and minor tick marks do not.  
-
-  Metrics:
-  If there are N points, with a width of W, then the ticks are spaced W/N pixels apart.  
-
-  
-  label-source - default "ordinal"
-  Indicates the source of the ticks. 
-    ordinal - use the order of the tick marks to set values 
-    data - use the data to set the values (ticks will range from fn:min($data) to fn:max($data))
-
-  label-min - default none
-  Set the mininum value for the x axis label
-  
-  label-max - default none
-  Set the minimum value for the x axis label
-
-  minor-tick-size - default 3
-  The size for the minor ticks
-
-  major-tick-size - default 5
-  The size of the major ticks
-
-  major-ticks-every - none
-  Every X tick marks place a major tick, otherwise place a minor tick.
-
-  minor-ticks-every - nonde
-  Every X tick marks place a minor tick, otherwise place nothing.
-
-  tick-labels - default yes/true
-  Place a numeric label (based on data) at every major tick mark.
-
-  first-label - default yes/true
-  Place a label at the first tick mark on the axis.
-
-  last-label - default yes/true
-  Place a label at the last X tick mark on the axis.
-
-  minor-tick-width - default 1
-  The stroke width for the minor tick
-
-  major-tick-width - default 1
-  The stroke width for the major tick
-
-  axis-line-width - default 1
-  The stroke width for the axis line
-
-  color - default none
-  The color to use for all the X axis elements
-
-  axis-line-color - default none
-  The color to use for the axis line (overriding color)
-
-  tick-color - default none
-  The color to use for the tick marks (overriding color)
-
-  major-tick-color - default none
-  The color to use for the major tick marks (overriding tick-color or color)
-
-  minor-tick-color - default none
-  The color to use for the minor tick marks (overriding tick-color or color)
-
-  label-font - default none
-  The font to use for labels
-
-  label-size - default none
-  The text size of the labels
-
-  label-picture - default none
-  The picture used to format the label data
-
-  lebel-color - default none
-  The color to use for the labels.
-
-  lengend-font - default none
-  The font for the optional legend
-
-  legend-size - default none
-  The size of the legend text
-
-  Tested
-:)
 (: 
-  Utility Functions
+  UTILITY FUNCTIONS
+  =======================================================================
+  options-to-map 
+  get-min-tick-value 
+  get-max-tick-value
+  get-optimal-major-ticks-count
+  get-major-ticks-every
+  get-minor-ticks-every
+  set-x-axis-defaults
+  set-y-axis-defaults
+  set-line-plot-defaults
+  set-bar-graph-defaults
 :)
 declare function parts:options-to-map($options as xs:string*) as map:map {
   map:new(
     for $option in $options
     let $parts := fn:tokenize($option, "=")
     return map:entry($parts[1], $parts[2]))
+};
+
+declare function parts:global-max-for-maps-of-doubles($data as map:map) as xs:double
+{
+  let $maxes := for $key in map:keys($data) return fn:max(map:get($data, $key))
+  return fn:max($maxes)
+};
+
+declare function parts:global-min-for-maps-of-doubles($data as map:map) as xs:double
+{
+  let $mins := for $key in map:keys($data) return fn:min(map:get($data, $key))
+  return fn:min($mins)
 };
 
 (:
@@ -123,7 +49,7 @@ declare function parts:options-to-map($options as xs:string*) as map:map {
 
   Tested
 :)
-declare function parts:get-min-tick-value($label-source, $data, $label-min) {
+declare function parts:get-min-tick-value($label-source, $label-min, $data) {
   if (fn:exists($label-min))
   then
     $label-min
@@ -132,7 +58,9 @@ declare function parts:get-min-tick-value($label-source, $data, $label-min) {
     1
   else if ($label-source eq "data")
   then
-    fn:min($data)
+    typeswitch($data[1])
+      case map:map return parts:global-min-for-maps-of-doubles($data)
+      default return fn:min($data)
   else
     1
 };
@@ -145,11 +73,15 @@ declare function parts:get-min-tick-value($label-source, $data, $label-min) {
 
   Tested.
 :)
-declare function parts:get-max-tick-value($label-source, $data, $label-max) {
+declare function parts:get-max-tick-value($label-source, $label-max, $data) {
   if ($label-source eq "ordinal")
-    then fn:count($data)
+    then typeswitch($data[1])
+      case map:map return fn:count(map:get($data, map:keys($data)[1]))
+      default return fn:count($data)
   else if ($label-source eq "data")
-    then fn:max($data)
+    then typeswitch($data[1])
+      case map:map return parts:global-max-for-maps-of-doubles($data)
+      default return fn:max($data)
   else if ($label-max)
     then $label-max
   else fn:count($data)
@@ -164,7 +96,7 @@ declare function parts:get-max-tick-value($label-source, $data, $label-max) {
   Tested.
 :)
 declare function parts:get-optimal-major-ticks-count($width as xs:double, $optimal-tick-width) as xs:int {
-  fn:floor(xs:int($width) div xs:int($optimal-tick-width))
+  xs:int(fn:floor(xs:double($width) div xs:double($optimal-tick-width)))
 };
 
 (:
@@ -242,18 +174,31 @@ declare function parts:set-line-plot-defaults($options as map:map) {
   if (fn:not(map:contains($options, "line-width"))) then map:put($options, "line-width", 2) else (),
   if (fn:not(map:contains($options, "point-markers"))) then map:put($options, "point-markers", fn:false()) else (),
   if (fn:not(map:contains($options, "point-marker-radius"))) then map:put($options, "point-marker-radius", 5) else (),
+  if (fn:not(map:contains($options, "fill"))) then map:put($options, "fill", "none") else (),
+  $options
+};
+
+declare function parts:set-sparkline-defaults($options as map:map) {
+  if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", (
+    "#80A5E4", "#D45D5D", "#F2AE4E", "#D4D13F", "#3EB334", "#371FBF", "#873BE3")) else (),
+  if (fn:not(map:contains($options, "line-width"))) then map:put($options, "line-width", 1) else (),
+  if (fn:not(map:contains($options, "point-markers"))) then map:put($options, "point-markers", fn:false()) else (),
+  if (fn:not(map:contains($options, "point-marker-radius"))) then map:put($options, "point-marker-radius", 5) else (),
   $options
 };
 
 declare function parts:set-bar-graph-defaults($options as map:map) {
   if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", (
     "#80A5E4", "#D45D5D", "#F2AE4E", "#D4D13F", "#3EB334", "#371FBF", "#873BE3")) else (),
+  if (fn:not(map:contains($options, "min-value"))) then map:put($options, "min-value", 0) else (),
   $options
 };
 
 (:
-
-  Functions that draw Axes
+  DRAWING AXES LINES
+  =============================================================================
+  draw-x-axis-line
+  draw-y-axis-line
 :)
 declare function parts:draw-x-axis-line($width as xs:double, $options as map:map) {
   let $axis-line-color := if (map:contains($options, "axis-line-color")) then map:get($options, "axis-line-color") else ()
@@ -300,8 +245,14 @@ declare function parts:draw-y-axis-line($width as xs:double, $height as xs:doubl
 };
 
 (:
-
-  Drawing Tick Marks
+  DRAW TICK MARKS
+  ===================================================================================
+  draw-minor-tick
+  draw-minor-y-tick
+  draw-major-x-tick
+  draw-major-y-tick
+  draw-x-axis-ticks
+  draw-y-axis-ticks
 :)
 declare function parts:draw-minor-tick($x-offset as xs:double, $options as map:map) {
   let $minor-tick-size as xs:double := map:get($options, "minor-tick-size")
@@ -375,8 +326,8 @@ declare function parts:draw-x-axis-ticks($width as xs:double, $data, $options as
   let $label-source as xs:string := map:get($options, "label-source")
   let $label-min := if (map:contains($options, "label-min")) then map:get($options, "label-min") else ()
   let $label-max := if (map:contains($options, "label-max")) then map:get($options, "label-max") else ()
-  let $min-tick-value as xs:double := parts:get-min-tick-value($label-source, $data, $label-min)
-  let $max-tick-value as xs:double := parts:get-max-tick-value($label-source, $data, $label-max)
+  let $min-tick-value as xs:double := parts:get-min-tick-value($label-source, $label-min, $data)
+  let $max-tick-value as xs:double := parts:get-max-tick-value($label-source, $label-max, $data)
   let $major-tick-count as xs:int := parts:get-optimal-major-ticks-count($width, $optimal-major-tick-width)
   let $total-number-of-ticks := $max-tick-value - $min-tick-value + 1
   let $pixels-per-tick := $width div ($total-number-of-ticks - 1)
@@ -393,19 +344,12 @@ declare function parts:draw-x-axis-ticks($width as xs:double, $data, $options as
       (parts:draw-major-x-tick($x-offset, $options), $minor-ticks)
 };
 
-
-declare function parts:x-axis-ticks($width as xs:double, $height as xs:double, $data, $options as xs:string*) {
-  let $option-map := parts:options-to-map($options)
-  let $axis-line := parts:draw-x-axis-line($width, $option-map)
-  return ()
-};
-
 declare function parts:draw-y-axis-ticks($width as xs:double, $height as xs:double, $data, $options as map:map) {
   let $label-source as xs:string := map:get($options, "label-source")
   let $label-min := if (map:contains($options, "label-min")) then map:get($options, "label-min") else ()
   let $label-max := if (map:contains($options, "label-max")) then map:get($options, "label-max") else ()
-  let $min-tick-value as xs:double := parts:get-min-tick-value($label-source, $data, $label-min)
-  let $max-tick-value as xs:double := parts:get-max-tick-value($label-source, $data, $label-max)
+  let $min-tick-value as xs:double := xs:double(parts:get-min-tick-value($label-source, $label-min, $data))
+  let $max-tick-value as xs:double := xs:double(parts:get-max-tick-value($label-source, $label-max, $data))
   let $major-tick-count as xs:int := parts:get-optimal-major-ticks-count($height, $optimal-major-tick-width)
   let $total-number-of-ticks := $max-tick-value - $min-tick-value + 1
   let $pixels-per-tick := $height div $total-number-of-ticks
@@ -423,15 +367,20 @@ declare function parts:draw-y-axis-ticks($width as xs:double, $height as xs:doub
 };
 
 (:
-  Drawing Labels
+  DRAWING LABELS
+  ========================================================================
+  x-axis-labels
+  draw-y-axis-labels
+  draw-y-axis-labels-all
+  draw-bar-labels
 :)
 declare function parts:x-axis-labels($width, $data, $options as map:map) {
   let $label-source as xs:string := map:get($options, "label-source")
   let $label-min := if (map:contains($options, "label-min")) then map:get($options, "label-min") else ()
   let $label-max := if (map:contains($options, "label-max")) then map:get($options, "label-max") else ()
   let $css-prefix := if (map:contains($options, "css-prefix")) then map:get($options, "css-prefix") else ()
-  let $min-tick-value as xs:double := parts:get-min-tick-value($label-source, $data, $label-min)
-  let $max-tick-value as xs:double := parts:get-max-tick-value($label-source, $data, $label-max)
+  let $min-tick-value as xs:double := parts:get-min-tick-value($label-source, $label-min, $data)
+  let $max-tick-value as xs:double := parts:get-max-tick-value($label-source, $label-max, $data)
   let $major-tick-count as xs:int := parts:get-optimal-major-ticks-count($width, $optimal-major-tick-width)
   let $total-number-of-ticks := $max-tick-value - $min-tick-value + 1
   let $pixels-per-tick := $width div ($total-number-of-ticks - 1)
@@ -450,42 +399,75 @@ declare function parts:draw-y-axis-labels($width as xs:double, $height as xs:dou
   let $label-min := if (map:contains($options, "label-min")) then map:get($options, "label-min") else ()
   let $label-max := if (map:contains($options, "label-max")) then map:get($options, "label-max") else ()
   let $css-prefix := if (map:contains($options, "css-prefix")) then map:get($options, "css-prefix") else ()
-  let $min-tick-value as xs:double := parts:get-min-tick-value($label-source, $data, $label-min)
-  let $max-tick-value as xs:double := parts:get-max-tick-value($label-source, $data, $label-max)
+  let $min-tick-value as xs:double := xs:double(parts:get-min-tick-value($label-source, $label-min, $data))
+  let $max-tick-value as xs:double := xs:double(parts:get-max-tick-value($label-source, $label-max, $data))
   let $major-tick-count as xs:int := parts:get-optimal-major-ticks-count($height, $optimal-major-tick-width)
   let $total-number-of-ticks := $max-tick-value - $min-tick-value + 1
   let $pixels-per-tick := $height div $total-number-of-ticks
   let $rotation := map:get($options, 'rotation')
-  let $_ := xdmp:log(element parts:draw-y-axis-labels {
-    element label-min { $label-min }, element label-max { $label-max },
-    element min-tick-value { $min-tick-value }, element max-tick-value { $max-tick-value },
-    element major-tick-count { $major-tick-count },
-    element total-number-of-ticks { $total-number-of-ticks },
-    element pixels-per-tick { $pixels-per-tick },
-    element rotation { $rotation }
-  })
+  let $_ := xdmp:log(
+    element parts:x-axis-labels {
+      element label-source { $label-source },
+      element label-min { $label-min },
+      element label-max { $label-max },
+      element min-tick-value { $min-tick-value },
+      element max-tick-value { $max-tick-value },
+      element major-tick-count { $major-tick-count },
+      element total-number-of-ticks { $total-number-of-ticks }
+    }
+  )
   return
-    for $idx in 1 to xs:int($major-tick-count) - 1
-    let $_ := xdmp:log("Drawing label: " || xs:string($idx))
-    let $tick-offset := $idx * fn:round($total-number-of-ticks div ($major-tick-count - 1))
+    for $idx in 1 to xs:int($major-tick-count)
+    let $tick-offset := ($idx - 1) * fn:round($total-number-of-ticks div ($major-tick-count - 1))
 
-    let $y-offset := $height - $height * ($tick-offset - $min-tick-value) div ($max-tick-value - $min-tick-value)
-    let $label := $min-tick-value + $tick-offset
+    let $y-offset := $height - $height * (fn:max(($tick-offset - $min-tick-value, 0))) div ($max-tick-value - $min-tick-value)
+    let $label := $tick-offset
     let $anchor := if ($rotation eq 0) then "text-anchor=end" 
       else if ($idx ne $major-tick-count) then "text-anchor=middle" 
       else "text-anchor=end"
-    let $_ := xdmp:log(element parts:draw-y-axis-labels {
-      element tick-offset { $tick-offset }, element y-offset { $y-offset }, 
-      element label { $label }, element anchor { $anchor }
-    })
     where $tick-offset <= $max-tick-value
     return
-      (:
-      drawing:text(0, 0, xs:string($label), ($anchor, "font-size=10", "font-weight=100", 
-        "transform=rotate(90) translate(" || xs:string($width - 5) ||", "||$y-offset||")"))
-      :)
-      drawing:text($width - 10, $y-offset, xs:string($label), ($anchor, "font-size=10", "font-weight=100",
-        "transform=rotate(-" || xs:string($rotation) || ", "||xs:string($width - 10)||","||xs:string($y-offset)||")"))
+      if ($idx eq $major-tick-count) 
+      then
+        drawing:text($width - 10, $y-offset, xs:string($label), ($anchor, "font-size=10", "font-weight=100",
+          "text-anchor=end",
+          "transform=rotate(-" || xs:string($rotation) || ", "||xs:string($width - 10)||","||xs:string($y-offset)||")"))
+      else 
+        drawing:text($width - 10, $y-offset, xs:string($label), ($anchor, "font-size=10", "font-weight=100",
+          "transform=rotate(-" || xs:string($rotation) || ", "||xs:string($width - 10)||","||xs:string($y-offset)||")"))
+};
+
+declare function parts:draw-y-axis-labels-all($width as xs:double, $height, $data, $options as map:map) {
+  let $label-source as xs:string := map:get($options, "label-source")
+  let $label-min := if (map:contains($options, "label-min")) then map:get($options, "label-min") else ()
+  let $label-max := if (map:contains($options, "label-max")) then map:get($options, "label-max") else ()
+  let $css-prefix := if (map:contains($options, "css-prefix")) then map:get($options, "css-prefix") else ()
+  let $min-tick-value as xs:double := $label-min
+  let $max-tick-value as xs:double := fn:max($data)
+  let $major-tick-count as xs:int := xs:int(fn:round($max-tick-value - $min-tick-value + 1))
+  let $total-number-of-ticks := $major-tick-count
+  let $pixels-per-tick := $height div $total-number-of-ticks
+  let $rotation := map:get($options, 'rotation')
+  return
+    for $idx in 1 to xs:int($major-tick-count)
+    let $tick-offset := ($idx - 1) * fn:round($total-number-of-ticks div ($major-tick-count - 1))
+
+    let $y-offset := $height - $height * (fn:max(($tick-offset - $min-tick-value, 0))) div ($max-tick-value - $min-tick-value)
+    let $label := $tick-offset
+    let $anchor := if ($rotation eq 0) then "text-anchor=end" 
+      else if ($idx ne $major-tick-count) then "text-anchor=middle" 
+      else "text-anchor=end"
+    where $tick-offset <= $max-tick-value
+    return
+      if ($idx eq $major-tick-count)
+      then 
+        drawing:text($width - 10, $y-offset, xs:string($label), ($anchor, "font-size=10", "font-weight=100",
+          "text-anchor=end",
+          "transform=rotate(-" || xs:string($rotation) || ", "||xs:string($width - 10)||","||xs:string($y-offset)||")"))
+      else 
+        drawing:text($width - 10, $y-offset, xs:string($label), ($anchor, "font-size=10", "font-weight=100",
+          "text-anchor=middle",
+          "transform=rotate(-" || xs:string($rotation) || ", "||xs:string($width - 10)||","||xs:string($y-offset)||")"))
 };
 
 declare function parts:draw-bar-labels($width as xs:double, $labels, $options as map:map) {
@@ -498,12 +480,18 @@ declare function parts:draw-bar-labels($width as xs:double, $labels, $options as
     let $anchor := if ($rotation gt 0) then "text-anchor=end" else "text-anchor=middle" 
     return
       drawing:text($x, $y, xs:string($label), ($anchor, "font-size=10", "font-weight=100",
-        "transform=rotate(" || -$rotation || ", "||xs:string($x)||","||xs:string($y)||")"))
+        if ($rotation gt 0) 
+        then 
+          "transform=rotate(" || -$rotation || ", "||xs:string($x)||","||xs:string($y)||")"
+        else ()))
 
 };
 
 (:
   LINE PLOTTING 
+  =====================================================================
+  draw-simple-line-plot
+  draw-multi-series-line-plot
 :)
 
 declare function parts:draw-simple-line-plot($width as xs:double, $height as xs:double, $data as xs:double*, 
@@ -527,7 +515,7 @@ declare function parts:draw-multi-series-line-plot($width as xs:double, $height 
   let $global-max := fn:max(for $key in map:keys($data) return fn:max(map:get($data, $key)))
   let $global-min := fn:min(for $key in map:keys($data) return fn:min(map:get($data, $key)))
   let $max-count := fn:max(for $key in map:keys($data) return fn:count(map:get($data, $key)))
-  let $point-spacing := $width div $max-count
+  let $point-spacing := $width div ($max-count - 1)
   let $line-width := map:get($options, "line-width")
   let $series-colors := map:get($options, "series-colors")
   return
@@ -539,7 +527,7 @@ declare function parts:draw-multi-series-line-plot($width as xs:double, $height 
         (1 - ($series-data[$point-idx] - $global-min) div ($global-max - $global-min)) * $height)
     order by $key
     return
-      drawing:polyline($points, ("class="||$key, "stroke="||$color, "stroke-width="||$line-width))
+      drawing:polyline($points, ("class="||$key, "stroke="||$color, "stroke-width="||$line-width, "fill=none"))
 
 };
 
@@ -553,25 +541,17 @@ declare function parts:draw-line-plot($width as xs:double, $height as xs:double,
 
 (:
   BAR CHARTS
-  
+  =============================================================================
+  draw-bar-chart
 :)
 declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $options as map:map, $data as map:map) {
-  let $_ := xdmp:log($options, "info")
   let $all-values := map:get($data, "values")
-  let $min-value := min(($all-values, map:get($options, "min-value")))
-  let $max-value := max(($all-values, map:get($options, "max-value")))
+  let $min-value := min(($all-values, xs:double(map:get($options, "min-value"))))
+  let $max-value := max(($all-values, xs:double(map:get($options, "max-value"))))
   let $bar-gap := 3.0
   let $outer-width := $width div fn:count($all-values)
   let $bar-width := $outer-width - $bar-gap
   let $color := map:get($options, "series-colors")[1]
-  let $_ := xdmp:log(element bar-chart {
-    element all-values { $all-values },
-    element min-value { $min-value },
-    element max-value { $max-value },
-    element outer-width { $outer-width },
-    element bar-width { $bar-width },
-    element color { $color }
-  }, "notice")
   return
     for $datum at $data-idx in $all-values
     let $y := (1 - (($datum - $min-value) div ($max-value - $min-value))) * $height
@@ -580,21 +560,6 @@ declare function parts:draw-bar-chart($width as xs:double, $height as xs:double,
     return 
       drawing:rect($x, $y, $bar-width, $bar-height, ("fill="||$color))
 };
-
-(:
-  series-colors - default (#CC0000, #00CC00 ... ) do about 20
-  The color for each series line
-:)
-declare function parts:line-plot($markers as node()*, $options as xs:string*) {
-  ()
-};
-
-(:
-  Markers are things to draw on the chart in terms of the data, like
-  add a star above the data point where X=3.  Markers should have a 
-  fixed size, like 16px.  We may need an option to allow spacing for markers
-  and a set of standard markers.
-:)
 
 (:
   best-fit-line - default none

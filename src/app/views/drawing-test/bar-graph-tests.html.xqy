@@ -16,7 +16,8 @@ import module namespace charts="http://marklogic.com/ps/charting" at "/app/lib/c
     <tr>
       <td>
         Basic bar chart 4 values, min value of zero.
-        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, $options as map:map*)</code>
+        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, 
+          $options as map:map*)</code>
       </td>
       <td>A middle finger</td>
       <td>
@@ -35,7 +36,8 @@ import module namespace charts="http://marklogic.com/ps/charting" at "/app/lib/c
     <tr>
       <td>
         Basic bar chart 4 values, min value of zero with labels
-        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, $options as map:map*)</code>
+        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, 
+          $options as map:map*)</code>
       </td>
       <td>A middle finger</td>
       <td>
@@ -54,7 +56,8 @@ import module namespace charts="http://marklogic.com/ps/charting" at "/app/lib/c
     <tr>
       <td>
         Basic bar chart 4 values, min value of zero with labels
-        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, $options as map:map*)</code>
+        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, 
+          $options as map:map*)</code>
       </td>
       <td>A middle finger</td>
       <td>
@@ -74,7 +77,8 @@ import module namespace charts="http://marklogic.com/ps/charting" at "/app/lib/c
     <tr>
       <td>
         Basic bar chart 4 values, min value of zero with labels
-        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, $options as map:map*)</code>
+        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, 
+          $options as map:map*)</code>
       </td>
       <td>A middle finger</td>
       <td>
@@ -95,7 +99,8 @@ import module namespace charts="http://marklogic.com/ps/charting" at "/app/lib/c
     <tr>
       <td>
         Basic bar chart 4 values, min value of zero with labels
-        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, $options as map:map*)</code>
+        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, 
+          $options as map:map*)</code>
       </td>
       <td>A middle finger</td>
       <td>
@@ -113,6 +118,40 @@ import module namespace charts="http://marklogic.com/ps/charting" at "/app/lib/c
             drawing:set-attribute($bars, "transform", "translate(30, 0)"))
           return 
             drawing:render(230, 230, ($bars, $x-labels, $y-labels))
+        }
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Basic bar chart 4 values, min value of zero with labels
+        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, 
+          $options as map:map*)</code>
+      </td>
+      <td>A middle finger</td>
+      <td>
+        {
+          let $data := map:new((map:entry("values", (3, 5, 3, 2)), 
+            map:entry("labels", ("one", "two", "three", "four"))))
+          return 
+            charts:draw-bar-plot(200, 200, $data) 
+        }
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Basic bar chart 4 values, min value of zero with labels
+        <code>declare function parts:draw-bar-chart($width as xs:double, $height as xs:double, $data as map:map*, 
+          $options as map:map*)</code>
+      </td>
+      <td>A middle finger</td>
+      <td>
+        {
+          let $data := map:new((map:entry("values", (3, 5, 3, 2)), 
+            map:entry("labels", ("one", "two", "three", "four"))))
+          return 
+            charts:draw-bar-plot(200, 200, $data, ("y-labels=all")) 
         }
       </td>
     </tr>

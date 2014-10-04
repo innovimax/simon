@@ -22,3 +22,7 @@ declare function c:bar-graph-tests() {
   ()
 };
 
+declare function c:sparkline-tests() {
+	()
+};
+
