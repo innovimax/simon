@@ -8,6 +8,10 @@ declare namespace svg="http://www.w3.org/2000/svg";
 
 declare variable $optimal-major-tick-width as xs:int := 50;
 
+declare variable $fill-colors := ("#80A5E4", "#D45D5D", "#F2AE4E", "#D4D13F", "#2fb328",
+  "#4221e1", "#873BE3", "#d78535", "#8bbf41", "#3fdfe3", "#254725", "#741c1e", "#9b6f35",
+  "#6c6920", "#354631", "#100a33", "#412174", "#5e3a17", "#334618", "#19585a");
+
 
 (: 
   UTILITY FUNCTIONS
@@ -169,8 +173,7 @@ declare function parts:set-y-axis-defaults($options as map:map) {
 };
 
 declare function parts:set-line-plot-defaults($options as map:map) {
-  if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", (
-    "#80A5E4", "#D45D5D", "#F2AE4E", "#D4D13F", "#3EB334", "#371FBF", "#873BE3")) else (),
+  if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", $fill-colors) else (),
   if (fn:not(map:contains($options, "line-width"))) then map:put($options, "line-width", 2) else (),
   if (fn:not(map:contains($options, "point-markers"))) then map:put($options, "point-markers", fn:false()) else (),
   if (fn:not(map:contains($options, "point-marker-radius"))) then map:put($options, "point-marker-radius", 5) else (),
@@ -179,8 +182,7 @@ declare function parts:set-line-plot-defaults($options as map:map) {
 };
 
 declare function parts:set-sparkline-defaults($options as map:map) {
-  if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", (
-    "#80A5E4", "#D45D5D", "#F2AE4E", "#D4D13F", "#3EB334", "#371FBF", "#873BE3")) else (),
+  if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", $fill-colors) else (),
   if (fn:not(map:contains($options, "line-width"))) then map:put($options, "line-width", 1) else (),
   if (fn:not(map:contains($options, "point-markers"))) then map:put($options, "point-markers", fn:false()) else (),
   if (fn:not(map:contains($options, "point-marker-radius"))) then map:put($options, "point-marker-radius", 5) else (),
@@ -188,10 +190,20 @@ declare function parts:set-sparkline-defaults($options as map:map) {
 };
 
 declare function parts:set-bar-graph-defaults($options as map:map) {
-  if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", (
-    "#80A5E4", "#D45D5D", "#F2AE4E", "#D4D13F", "#3EB334", "#371FBF", "#873BE3")) else (),
+  if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", $fill-colors) else (),
   if (fn:not(map:contains($options, "min-value"))) then map:put($options, "min-value", 0) else (),
   $options
+};
+
+declare function parts:set-pie-chart-defaults($options as map:map) {
+  if (fn:not(map:contains($options, "fill"))) then map:put($options, "fill", $fill-colors[1]) else (),
+  if (fn:not(map:contains($options, "series-colors"))) then map:put($options, "series-colors", $fill-colors) else (),
+  if (fn:not(map:contains($options, "threshold"))) then map:put($options, "threshold", 0.05) else (),
+  $options
+};
+
+declare function parts:set-guage-defaults($options as map:map) {
+  parts:set-pie-chart-defaults($options)
 };
 
 (:
@@ -561,6 +573,64 @@ declare function parts:draw-bar-chart($width as xs:double, $height as xs:double,
       drawing:rect($x, $y, $bar-width, $bar-height, ("fill="||$color))
 };
 
+declare function parts:convert-to-circle-x-y($center as xs:double*, $radius as xs:double, $arc-radians as xs:double) {
+  let $x := $center[1] + math:sin($arc-radians) * $radius
+  let $y := $center[2] - math:cos($arc-radians) * $radius
+  return ($x, $y)
+};
+
+declare function parts:draw-pie-chart($width as xs:double, $height as xs:double, $data as xs:double*,
+        $options as map:map)
+{
+  let $sum as xs:double := fn:sum($data)
+  let $radians := for $datum in $data return ($datum div $sum) * 2.0 * math:pi()
+  let $center := ($width div 2.0, $height div 2.0)
+  let $radius := fn:min($center) - 2.0
+  return
+    for $idx in (1 to fn:count($radians))
+    let $start := if ($idx eq 1) then 0.0 else fn:sum($radians[(1 to ($idx - 1))])
+    let $end := $start + $radians[$idx]
+    let $color := map:get($options, "series-colors")[$idx]
+    return
+      let $start-point := parts:convert-to-circle-x-y($center, $radius, $start)
+      let $end-point := parts:convert-to-circle-x-y($center, $radius, $end)
+      let $path := drawing:path()
+      let $large-arc-flag := if ($end - $start gt math:pi()) then 1 else 0
+      let $_ := drawing:add-move-to($path, $start-point[1], $start-point[2])
+      let $_ := drawing:add-arc($path, $radius, $radius, 0, $large-arc-flag, 1, $end-point[1], $end-point[2])
+      let $_ := drawing:add-line-to($path, $center[1], $center[2])
+      let $_ := drawing:add-close-path($path)
+      let $_ := drawing:set-fill($path, $color)
+      return $path
+};
+
+declare function parts:draw-guage($width as xs:double, $height as xs:double, $current as xs:double, $max as xs:double, $options) {
+  let $radians :=  ($current div $max) * 2.0 * math:pi()
+  let $center := ($width div 2.0, $height div 2.0)
+  let $outer-radius := fn:min($center) - 2.0
+  let $inner-radius := fn:min(($outer-radius - 10, $outer-radius * 0.9))
+  return
+    let $outer-start-point := parts:convert-to-circle-x-y($center, $outer-radius, 0.0)
+    let $outer-end-point   := parts:convert-to-circle-x-y($center, $outer-radius, $radians)
+    let $inner-start-point := parts:convert-to-circle-x-y($center, $inner-radius, 0.0)
+    let $inner-end-point   := parts:convert-to-circle-x-y($center, $inner-radius, $radians)
+
+    let $path := drawing:path()
+    let $large-arc-flag := if ($radians gt math:pi()) then 1 else 0
+    let $_ := drawing:add-move-to($path, $outer-start-point[1], $outer-start-point[2])
+    let $_ := drawing:add-arc($path, $outer-radius, $outer-radius, 0, $large-arc-flag, 1, $outer-end-point[1], $outer-end-point[2])
+    let $_ := drawing:add-line-to($path, $inner-end-point[1], $inner-end-point[2])
+    let $_ := drawing:add-arc($path, $inner-radius, $inner-radius, 0, $large-arc-flag, 0, $inner-start-point[1], $inner-start-point[2])
+    let $_ := drawing:add-close-path($path)
+    let $_ := drawing:set-fill($path, map:get($options, "fill"))
+
+    let $text := drawing:text($center[1], $center[2] * 1.25, xs:string(fn:round($current)))
+    let $_ := drawing:set-attribute($text, "font-size", $inner-radius)
+    let $_ := drawing:set-attribute($text, "font-weight", 700)
+    let $_ := drawing:set-attribute($text, "text-anchor", "middle")
+    return ($path, $text)
+};
+
 (:
   best-fit-line - default none
   Show the best fit line
@@ -586,18 +656,6 @@ declare function parts:grouped-bar-chart($markers as node()*, $options as xs:str
 };
 
 declare function parts:area-chart($markers as node()*, $options as xs:string*) {
-  ()
-};
-
-declare function parts:pie-chart($markers as node()*, $options as xs:string*) {
-  ()
-};
-
-declare function parts:sparkline($options as xs:string*) {
-  ()
-};
-
-declare function parts:gauge($options as xs:string*) {
   ()
 };
 

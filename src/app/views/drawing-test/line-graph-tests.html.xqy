@@ -1,7 +1,5 @@
 xquery version "1.0-ml";
 
-import module namespace drawing="http://marklogic.com/ps/drawing" at "/app/lib/drawing.xqy";
-import module namespace parts="http://marklogic.com/ps/chart-parts" at "/app/lib/chart-parts.xqy";
 import module namespace charts="http://marklogic.com/ps/charting" at "/app/lib/charting.xqy";
 
 <table class='testing'>

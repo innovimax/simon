@@ -135,5 +135,38 @@ declare function chart:draw-sparkline($width as xs:double, $height as xs:double,
 	chart:draw-sparkline($width, $height, $data, ())
 };
 
+declare function chart:draw-pie-chart($width as xs:double, $height as xs:double, $data, $options as xs:string*) {
+	let $chart-settings := map:new()
+	let $_ := chart:parse-chart-options($options, $chart-settings)
+	let $plot-options := parts:set-pie-chart-defaults($chart-settings)
+
+	let $plot := drawing:make-group(parts:draw-pie-chart($width, $height, $data, $plot-options))
+	let $_ := (drawing:set-attribute($plot, "transform", "translate(0, 1)"))
+	return
+		drawing:render($width, $height, $plot)
+};
+
+declare function chart:draw-pie-chart($width as xs:double, $height as xs:double, $data) {
+	chart:draw-pie-chart($width, $height, $data, ())
+};
+
+declare function chart:draw-clock-guage($width as xs:double, $height as xs:double, $value as xs:double, $max as xs:double, $options as xs:string*) {
+	let $chart-settings := map:new()
+	let $_ := chart:parse-chart-options($options, $chart-settings)
+	let $plot-options := parts:set-guage-defaults($chart-settings)
+
+	let $plot := if ($value lt $max)
+		then drawing:make-group(parts:draw-guage($width, $height, $value, $max, $plot-options))
+		else drawing:make-group(parts:draw-guage($width, $height, $max * 0.9999, $max, $plot-options))
+
+	let $_ := (drawing:set-attribute($plot, "transform", "translate(0, 1)"))
+	return
+		drawing:render($width, $height, $plot)
+};
+
+declare function chart:draw-clock-guage($width as xs:double, $height as xs:double, $value as xs:double, $max as xs:double) {
+	chart:draw-clock-guage($width, $height, $value, $max, ())
+};
+
 
 

@@ -26,3 +26,11 @@ declare function c:sparkline-tests() {
 	()
 };
 
+declare function c:pie-chart-tests() {
+  ()
+};
+
+declare function c:guage-tests() {
+  ()
+};
+
