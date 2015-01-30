@@ -82,8 +82,6 @@ declare function rh:set-content-type($format)
       xdmp:set-response-content-type("application/json")
     else if ($format eq "text") then
       xdmp:set-response-content-type("text/plain")
-    else if ($format eq "svg") then
-      xdmp:set-response-content-type("image/svg+xml")
     else
       xdmp:set-response-content-type($format)
 };

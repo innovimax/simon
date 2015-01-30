@@ -17,9 +17,14 @@ require 'Help'
 require 'server_config'
 require 'framework'
 require 'util'
-require 'app_specific'
 require 'upgrader'
 require 'scaffold'
+
+if is_jar?
+  require ServerConfig.expand_path("./deploy/app_specific")
+else
+  require 'app_specific'
+end
 
 def need_help?
   find_arg(['-h', '--help']) != nil
@@ -45,13 +50,26 @@ end
   "#{sev}#{msg}\n"
 }
 
+if ARGV.length == 1 && need_help?
+  Help.doHelp(@logger, :usage)
+  exit
+end
+
 if RUBY_VERSION < "1.8.7"
   @logger.warn <<-MSG
 
     WARNING!!!
     You are using a very old version of Ruby: #{RUBY_VERSION}
-    Roxy works best with Ruby 1.8.7 or greater.
+    Roxy works best with Ruby 1.9.3 or greater.
     Proceed with caution.
+  MSG
+elsif RUBY_VERSION < "1.9.3"
+  @logger.warn <<-MSG
+
+    WARNING!!!
+    Ruby version 1.9.3 is the oldest supported version. You are running
+    Ruby #{RUBY_VERSION}. Some features may not work. You are encouraged to
+    upgrade to Ruby 1.9.3+.
   MSG
 end
 
@@ -117,6 +135,8 @@ begin
       if need_help? && Help.respond_to?(command)
         Help.doHelp(@logger, command)
         break
+      elsif command.start_with?("--ml.")
+        break
       elsif ServerConfig.instance_methods.include?(command.to_sym) || ServerConfig.instance_methods.include?(command)
         raise HelpException.new(command, "Missing environment for #{command}") if @properties["environment"].nil?
         raise ExitException.new("Missing ml-config.xml file. Check config.file property") if @properties["ml.config.file"].nil?
@@ -127,7 +147,7 @@ begin
           :logger => @logger
         ).send(command)
       else
-        Help.doHelp(@logger, :usage)
+        Help.doHelp(@logger, :usage, "Unknown command #{command}!")
         break
       end
     end

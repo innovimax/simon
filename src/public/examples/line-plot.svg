@@ -1,0 +1,65 @@
+<svg width="320" height="200" xmlns="http://www.w3.org/2000/svg">
+    <polyline
+            points="0,0 32.7777777777778,155.555555555556 65.5555555555556,97.2222222222222 98.3333333333333,136.111111111111 131.111111111111,97.2222222222222 163.888888888889,155.555555555556 196.666666666667,136.111111111111 229.444444444444,97.2222222222222 262.222222222222,58.3333333333333 295,38.8888888888889"
+            class="series-1" stroke-width="2" fill="none" transform="translate(25, 0)" stroke="#D45D5D"></polyline>
+    <polyline
+            points="0,175 32.7777777777778,136.111111111111 65.5555555555556,19.4444444444444 98.3333333333333,116.666666666667 131.111111111111,155.555555555556 163.888888888889,175 196.666666666667,136.111111111111 229.444444444444,136.111111111111 262.222222222222,116.666666666667 295,155.555555555556"
+            class="series-2" stroke-width="2" fill="none" transform="translate(25, 0)" stroke="#80A5E4"></polyline>
+    <g transform="translate(25, 175)">
+        <line class="x-axis-line" y1="0" stroke-width="1" x2="295" y2="0" x1="0" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="32.7777777777778" y2="5" x1="32.7777777777778" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="32.7777777777778" y2="3" x1="32.7777777777778" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="32.7777777777778" y2="3" x1="32.7777777777778" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="32.7777777777778" y2="3" x1="32.7777777777778" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="32.7777777777778" y2="3" x1="32.7777777777778" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="98.3333333333333" y2="5" x1="98.3333333333333" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="98.3333333333333" y2="3" x1="98.3333333333333" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="98.3333333333333" y2="3" x1="98.3333333333333" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="98.3333333333333" y2="3" x1="98.3333333333333" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="98.3333333333333" y2="3" x1="98.3333333333333" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="163.888888888889" y2="5" x1="163.888888888889" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="163.888888888889" y2="3" x1="163.888888888889" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="163.888888888889" y2="3" x1="163.888888888889" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="163.888888888889" y2="3" x1="163.888888888889" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="163.888888888889" y2="3" x1="163.888888888889" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="229.444444444444" y2="5" x1="229.444444444444" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="229.444444444444" y2="3" x1="229.444444444444" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="229.444444444444" y2="3" x1="229.444444444444" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="229.444444444444" y2="3" x1="229.444444444444" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="229.444444444444" y2="3" x1="229.444444444444" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="295" y2="5" x1="295" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="295" y2="3" x1="295" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="295" y2="3" x1="295" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="295" y2="3" x1="295" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="295" y2="3" x1="295" stroke="#000000"></line>
+        <text y="17" font-weight="100" x="32.7777777777778" font-size="10" text-anchor="middle">2</text>
+        <text y="17" font-weight="100" x="98.3333333333333" font-size="10" text-anchor="middle">4</text>
+        <text y="17" font-weight="100" x="163.888888888889" font-size="10" text-anchor="middle">6</text>
+        <text y="17" font-weight="100" x="229.444444444444" font-size="10" text-anchor="middle">8</text>
+        <text y="17" font-weight="100" x="295" font-size="10" text-anchor="end">10</text>
+    </g>
+    <g>
+        <line class="y-axis-line" y1="0" stroke-width="1" x2="25" y2="175" x1="25" stroke="#000000"></line>
+        <line y1="105" stroke-width="1" x2="25" y2="105" x1="20" stroke="#000000"></line>
+        <line y1="122.5" stroke-width="1" x2="25" y2="122.5" x1="22" stroke="#000000"></line>
+        <line y1="140" stroke-width="1" x2="25" y2="140" x1="22" stroke="#000000"></line>
+        <line y1="157.5" stroke-width="1" x2="25" y2="157.5" x1="22" stroke="#000000"></line>
+        <line y1="175" stroke-width="1" x2="25" y2="175" x1="22" stroke="#000000"></line>
+        <line y1="52.5" stroke-width="1" x2="25" y2="52.5" x1="20" stroke="#000000"></line>
+        <line y1="52.5" stroke-width="1" x2="25" y2="52.5" x1="22" stroke="#000000"></line>
+        <line y1="52.5" stroke-width="1" x2="25" y2="52.5" x1="22" stroke="#000000"></line>
+        <line y1="52.5" stroke-width="1" x2="25" y2="52.5" x1="22" stroke="#000000"></line>
+        <line y1="52.5" stroke-width="1" x2="25" y2="52.5" x1="22" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="25" y2="0" x1="20" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="25" y2="0" x1="22" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="25" y2="0" x1="22" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="25" y2="0" x1="22" stroke="#000000"></line>
+        <line y1="0" stroke-width="1" x2="25" y2="0" x1="22" stroke="#000000"></line>
+        <text y="175" font-weight="100" x="15" font-size="10" text-anchor="middle" transform="rotate(-90, 15,175)">0
+        </text>
+        <text y="97.2222222222222" font-weight="100" x="15" font-size="10" text-anchor="middle"
+              transform="rotate(-90, 15,97.2222222222222)">5
+        </text>
+        <text y="0" font-weight="100" x="15" font-size="10" text-anchor="end" transform="rotate(-90, 15,0)">10</text>
+    </g>
+</svg>
