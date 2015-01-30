@@ -1,0 +1,7 @@
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(0, 1)">
+        <path fill="#80A5E4"
+              d="M 50,2 A 48,48, 0, 1, 1, 21.7863078899613,88.8328157299975 L 27.664160412886,80.742645786248 A 38,38, 0, 1, 0, 50,12 Z"></path>
+        <text y="62.5" font-weight="700" x="50" font-size="38" text-anchor="middle">60</text>
+    </g>
+</svg>
