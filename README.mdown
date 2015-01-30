@@ -10,4 +10,5 @@ The Simon drawing library is an XQuery library to draw simple charts inline in a
 * Will it work with IE 8?  Answer: No.  IE8 does not support SVG.
 * What files do I need? /src/app/lib/*.xqy
 * Where can I get more information?  [The Wiki](https://github.com/paul-hoehne/simon/wiki)
+* What's all the app for?  I need a platform for development.  Neither this app nor Roxy are required to use simon.
 
